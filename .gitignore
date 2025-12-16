@@ -1,0 +1,43 @@
+# ===============================
+# .NET / MAUI
+# ===============================
+bin/
+obj/
+**/bin/
+**/obj/
+
+# Rider
+.idea/
+*.sln.iml
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# macOS
+.DS_Store
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# Environment / secrets
+.env
+
+# Build artifacts
+*.apk
+*.aab
+*.app
+*.ipa
+
+# MAUI platform-specific
+**/Platforms/*/bin/
+**/Platforms/*/obj/
+
+# NuGet
+packages/
