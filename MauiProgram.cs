@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Myjournal.Database;
 
 namespace Myjournal;
 
@@ -12,6 +13,8 @@ public static class MauiProgram
             .ConfigureFonts(fonts => { fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular"); });
 
         builder.Services.AddMauiBlazorWebView();
+        
+        builder.Services.AddSingleton<ApplicationDbContext>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
