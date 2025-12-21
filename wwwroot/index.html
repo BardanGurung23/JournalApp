@@ -9,22 +9,56 @@
     <link rel="stylesheet" href="css/app.css" />
     <link rel="stylesheet" href="Myjournal.styles.css" />
     <link rel="icon" href="data:,">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 2. TAILWIND CONFIGURATION -->
+    <script>
+        tailwind.config = {
+            darkMode: ['class', '.dark-mode'],
+            theme: {
+                extend: {
+                    colors: {
+                     
+                        primary: 'var(--primary)',
+                        secondary: '#334455',
+                        journal: {
+                            light: '#f8f9fa',
+                            dark: '#1e1e1e'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
 </head>
 
 <body>
 
-    <div class="status-bar-safe-area"></div>
+<div class="status-bar-safe-area"></div>
 
-    <div id="app">Loading...</div>
+<div id="app">Loading...</div>
 
-    <div id="blazor-error-ui">
-        An unhandled error has occurred.
-        <a href="" class="reload">Reload</a>
-        <a class="dismiss">🗙</a>
-    </div>
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
 
-    <script src="_framework/blazor.webview.js" autostart="false"></script>
+<script src="_framework/blazor.webview.js" autostart="false"></script>
+<script src="_content/MudBlazor/MudBlazor.min.js"></script>
+
+<script>
+    window.toggleDarkMode = (isDark) => {
+        if (isDark) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+    };
+</script>
 
 </body>
-
 </html>
