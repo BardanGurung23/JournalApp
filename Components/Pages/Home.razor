@@ -1,5 +1,172 @@
 ﻿@page "/"
+@using Myjournal.Database
+@using JournalApp.Models
 
-<h1>Hello, world!</h1>
+<!-- Inject Database -->
+@inject ApplicationDbContext DbContext
+@inject IJSRuntime JS 
 
-Welcome to your new app.
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Daily Journal (@DateTime.Now.ToShortDateString())</h3>
+        
+        <div class="card bg-warning text-dark px-3 py-2">
+            <h5 class="m-0">🔥 @currentStreak Day Streak</h5>
+        </div>
+    </div>
+
+    <!-- ERROR MESSAGE DISPLAY -->
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">
+            @errorMessage
+        </div>
+    }
+
+    @if (isLoading)
+    {
+        <p><em>Loading your journal...</em></p>
+    }
+    else
+    {
+        <EditForm Model="@entry" OnValidSubmit="SaveEntry">
+            <DataAnnotationsValidator />
+            
+            <div class="card border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0">✍️ Write your story</h5>
+                </div>
+                <div class="card-body p-4">
+
+                    <!-- TITLE -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Title</label>
+                        <InputText @bind-Value="entry.Title" class="form-control" placeholder="Title of the day..."/>
+                    </div>
+
+                    <!-- MOODS ROW -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Primary Mood (Required)</label>
+                            <InputSelect @bind-Value="entry.PrimaryMood" class="form-select">
+                                <option value="">-- Select Mood --</option>
+                                <option value="Happy">Happy</option>
+                                <option value="Excited">Excited</option>
+                                <option value="Calm">Calm</option>
+                                <option value="Sad">Sad</option>
+                                <option value="Stressed">Stressed</option>
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Secondary Mood</label>
+                            <InputSelect @bind-Value="entry.SecondaryMood1" class="form-select">
+                                <option value="">-- None --</option>
+                                <option value="Tired">Tired</option>
+                                <option value="Energetic">Energetic</option>
+                                <option value="Anxious">Anxious</option>
+                            </InputSelect>
+                        </div>
+                    </div>
+
+             
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Content</label>
+                        <InputTextArea @bind-Value="entry.Content" class="form-control" rows="12" placeholder="Write your thoughts here...."/>
+                        
+                    </div>
+
+              
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="oi oi-check"></i> Save Entry
+                    </button>
+
+                </div>
+            </div>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private JournalEntry entry = new JournalEntry();
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+    
+    private int currentStreak = 0; //Daily streak
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTodaysEntry();
+    }
+
+    private async Task LoadTodaysEntry()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+
+            // 1. Get Table Rows
+            var allEntries = await DbContext.GetTableRowsAsync<JournalEntry>();
+            
+            var distinctDates = allEntries
+                .Select(e => e.EntryDate.Date)
+                .Distinct()
+                .OrderByDescending(d => d)
+                .ToList();
+
+            currentStreak = 0;
+            var checkDate = DateTime.Today;
+            
+            if (!distinctDates.Contains(checkDate))
+            {
+                checkDate = checkDate.AddDays(-1);
+            }
+            
+            while (distinctDates.Contains(checkDate))
+            {
+                currentStreak++;
+                checkDate = checkDate.AddDays(-1); // Go back one day
+            }
+            // --- STREAK CALCULATION END ---
+            
+            var today = DateTime.Today;
+            var existingEntry = allEntries.FirstOrDefault(e => e.EntryDate.Date == today);
+
+            if (existingEntry != null)
+            {
+                entry = existingEntry;
+            }
+            else
+            {
+                entry = new JournalEntry 
+                { 
+                    EntryDate = today,
+                    CreatedAt = DateTime.Now 
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    private async Task SaveEntry()
+    {
+        try
+        {
+            entry.UpdatedAt = DateTime.Now;
+            
+            await DbContext.AddOrUpdateAsync(entry);
+            
+            await JS.InvokeVoidAsync("alert", "Entry saved successfully!");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Save Failed: {ex.Message}";
+        }
+    }
+}

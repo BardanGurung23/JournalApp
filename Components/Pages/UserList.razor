@@ -1,0 +1,73 @@
+@page "/userlist"
+@inject ApplicationDbContext DbContext;
+@inject IJSRuntime JS
+
+<h1>User List</h1>
+
+@if (users == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!users.Any())
+{
+    <p>No users found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Username</th>
+            <th>Password</th>
+            <th>Email</th>
+            <th>Address</th>
+            <th>Gender</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var user in users)
+        {
+            <tr>
+                <td>@user.Username</td>
+                <td>@user.Password</td>
+                <td>@user.Email</td>
+                <td>@user.Address</td>
+                <td>@user.Gender</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<User> users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Load users
+            users = await App.Database.GetTableRowsAsync<User>();
+
+            // Seeding data for test
+            if (!users.Any())
+            {
+                await App.Database.CreateAsync(new User
+                {
+                    Username = "Bardan",
+                    Password = "1234",
+                    Email = "bardan@example.com",
+                    Address = "Kathmandu",
+                    Gender = "Male"
+                });
+
+                users = await App.Database.GetTableRowsAsync<User>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading users: {ex}");
+            users = new List<User>(); 
+        }
+    }
+}

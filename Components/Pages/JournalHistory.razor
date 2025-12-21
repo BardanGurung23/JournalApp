@@ -1,0 +1,108 @@
+@page "/history"
+@using Myjournal.Database
+@using JournalApp.Models
+@inject ApplicationDbContext DbContext
+@inject IJSRuntime JS 
+
+<div class="container mt-4">
+    <h3>Journal History</h3>
+    
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" placeholder="Search by title..." 
+               @bind="searchTerm" @bind:event="oninput" />
+        <span class="input-group-text">🔍</span>
+    </div>
+
+    @if (filteredEntries == null)
+    {
+        <p>Loading...</p>
+    }
+    else if (filteredEntries.Count == 0)
+    {
+        <div class="alert alert-info">No entries found. Go write one!</div>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var entry in filteredEntries)
+            {
+                <div class="list-group-item list-group-item-action flex-column align-items-start">
+                    <div class="d-flex w-100 justify-content-between">
+                        <!-- Date and Title -->
+                        <h5 class="mb-1">@entry.Title</h5>
+                        <small>@entry.EntryDate.ToShortDateString()</small>
+                    </div>
+                    
+                    <!-- Mood Badge -->
+                    <p class="mb-1">
+                        Mood: <span class="badge bg-info text-dark">@entry.PrimaryMood</span>
+                    </p>
+                    
+                    <small class="text-muted">
+                        @(entry.Content.Length > 50 ? entry.Content.Substring(0, 50) + "..." : entry.Content)
+                    </small>
+
+                    <!-- Delete Button -->
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteEntry(entry)">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<JournalEntry> allEntries = new();
+    private List<JournalEntry> filteredEntries = new();
+    
+    private string _searchTerm = "";
+    public string searchTerm 
+    { 
+        get => _searchTerm; 
+        set 
+        { 
+            _searchTerm = value;
+            FilterEntries();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEntries();
+    }
+
+    private async Task LoadEntries()
+    {
+        var result = await DbContext.GetTableRowsAsync<JournalEntry>();
+        allEntries = result.OrderByDescending(e => e.EntryDate).ToList();
+        FilterEntries();
+    }
+
+    private void FilterEntries()
+    {
+        if (string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            filteredEntries = allEntries;
+        }
+        else
+        {
+            filteredEntries = allEntries
+                .Where(e => (e.Title?.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) || 
+                            (e.Content?.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ?? false))
+                .ToList();
+        }
+    }
+
+    private async Task DeleteEntry(JournalEntry entry)
+    {
+        bool confirm = await JS.InvokeAsync<bool>("confirm", $"Delete '{entry.Title}'?");
+        if (confirm)
+        {
+            await DbContext.DeleteAsync(entry);
+            await LoadEntries();
+        }
+    }
+}
