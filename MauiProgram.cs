@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Myjournal.Database;
+using MudBlazor.Services; 
 
 namespace Myjournal;
 
@@ -14,7 +15,8 @@ public static class MauiProgram
 
         builder.Services.AddMauiBlazorWebView();
         
-        builder.Services.AddSingleton<ApplicationDbContext>();
+        builder.Services.AddMudServices();
+        builder.Services.AddSingleton<Myjournal.Database.ApplicationDbContext>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
